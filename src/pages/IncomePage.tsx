@@ -4,6 +4,7 @@ import { AlertTriangle, DollarSign, ChevronDown, ChevronUp, TrendingUp, Trending
 import { getPaychecks } from '../services/paycheck-service';
 import { getUserProfile } from '../services/profile-service';
 import { getBills } from '../services/bill-service';
+import { calculateMonthlyIncome } from '../services/income-service';
 import type { Paycheck, UserProfile, Bill } from '../types';
 import { useNavigate } from 'react-router-dom';
 
@@ -50,7 +51,7 @@ const IncomePage: React.FC = () => {
   }, [navigate]);
 
   const calculateMonthlyTotals = () => {
-    const monthlyIncome = profile?.income_amount || 0;
+    const monthlyIncome = profile ? calculateMonthlyIncome(profile.income_amount, profile.income_frequency) : 0;
     const monthlyBills = bills.reduce((total, bill) => {
       if (bill.frequency === 'monthly') {
         return total + (bill.amount || 0);
