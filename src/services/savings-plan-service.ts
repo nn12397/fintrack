@@ -1,27 +1,17 @@
 import { supabase } from '../lib/supabase';
 import type { SavingsPlan } from '../types';
 
-export async function getSavingsPlans(): Promise<SavingsPlan[]> {
-  const { data: userData } = await supabase.auth.getUser();
-  
-  if (!userData.user) {
-    throw new Error('User not authenticated');
-  }
-
+export async function getSavingsPlans() {
   const { data, error } = await supabase
     .from('savings_plans')
     .select('*')
-    .eq('user_id', userData.user.id)
     .order('created_at', { ascending: false });
 
-  if (error) {
-    throw error;
-  }
-
+  if (error) throw error;
   return data as SavingsPlan[];
 }
 
-export async function createSavingsPlan(plan: Partial<SavingsPlan>): Promise<SavingsPlan> {
+export async function createSavingsPlan(plan: Omit<SavingsPlan, 'id' | 'user_id' | 'created_at' | 'updated_at'>) {
   const { data: userData } = await supabase.auth.getUser();
   
   if (!userData.user) {
@@ -33,18 +23,18 @@ export async function createSavingsPlan(plan: Partial<SavingsPlan>): Promise<Sav
     .insert({
       ...plan,
       user_id: userData.user.id,
+      schedule_type: plan.schedule_type || 'Custom Schedule',
+      payment_type: plan.payment_type || 'Monthly',
+      plan_type: plan.plan_type || 'goal_amount',
     })
     .select()
     .single();
 
-  if (error) {
-    throw error;
-  }
-
+  if (error) throw error;
   return data as SavingsPlan;
 }
 
-export async function updateSavingsPlan(id: string, plan: Partial<SavingsPlan>): Promise<SavingsPlan> {
+export async function updateSavingsPlan(id: string, plan: Partial<Omit<SavingsPlan, 'id' | 'user_id' | 'created_at' | 'updated_at'>>) {
   const { data, error } = await supabase
     .from('savings_plans')
     .update({
@@ -55,20 +45,16 @@ export async function updateSavingsPlan(id: string, plan: Partial<SavingsPlan>):
     .select()
     .single();
 
-  if (error) {
-    throw error;
-  }
-
+  if (error) throw error;
   return data as SavingsPlan;
 }
 
-export async function deleteSavingsPlan(id: string): Promise<void> {
+export async function deleteSavingsPlan(id: string) {
   const { error } = await supabase
     .from('savings_plans')
     .delete()
     .eq('id', id);
 
-  if (error) {
-    throw error;
-  }
+  if (error) throw error;
+  return true;
 }
