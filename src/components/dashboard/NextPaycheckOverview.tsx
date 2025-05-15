@@ -3,7 +3,7 @@ import { format, addDays, parseISO, differenceInDays, isToday, addMonths, startO
 import { getDebitCards } from '../../services/debit-card-service';
 import { getUserProfile } from '../../services/profile-service';
 import { getNextPaycheckDate } from '../../services/paycheck-service';
-import { Wallet, Receipt, ChevronDown, ChevronUp, Equal } from 'lucide-react';
+import { Wallet, Receipt, ChevronDown, ChevronUp, Equal, CheckCircle2 } from 'lucide-react';
 import type { DebitCard, Bill, CreditCardPayment, Category, CreditCard } from '../../types';
 import { getBills } from '../../services/bill-service';
 import { getCreditCards } from '../../services/credit-card-service';
@@ -271,7 +271,9 @@ const NextPaycheckOverview: React.FC = () => {
     0
   );
 
-  const upcomingBillsTotal = bills.reduce((sum, bill) => sum + bill.amount, 0);
+  const upcomingBillsTotal = bills
+    .filter(bill => !bill.is_paid)
+    .reduce((sum, bill) => sum + bill.amount, 0);
   const totalExpectedFunds = totalAvailableFunds;
   const remainingAfterBills = totalExpectedFunds - upcomingBillsTotal;
 
@@ -279,7 +281,9 @@ const NextPaycheckOverview: React.FC = () => {
   const categoryData = categories
     .map(category => {
       const categoryBills = bills.filter(bill => bill.category_id === category.id);
-      const total = categoryBills.reduce((sum, bill) => sum + bill.amount, 0);
+      const total = categoryBills
+        .filter(bill => !bill.is_paid)
+        .reduce((sum, bill) => sum + bill.amount, 0);
       return {
         ...category,
         total,
@@ -434,7 +438,16 @@ const NextPaycheckOverview: React.FC = () => {
                               <div key={bill.id + bill.due_date} className="flex justify-between items-center text-base">
                                 <div className="flex items-center space-x-2">
                                   <span className="text-[#1e293b] font-medium">{bill.name}</span>
-                                  <span className={`text-xs px-2 py-1 rounded-full ${status.className}`}>{status.label}</span>
+                                  {bill.is_paid ? (
+                                    <span className="text-xs bg-green-100 text-green-800 px-1.5 py-0.5 rounded-full flex items-center gap-1">
+                                      <CheckCircle2 size={12} />
+                                      Paid
+                                    </span>
+                                  ) : (
+                                    <span className={`text-xs px-2 py-1 rounded-full ${status.className}`}>
+                                      {status.label}
+                                    </span>
+                                  )}
                                 </div>
                                 <span className="text-[#1e293b] font-semibold">{formatCurrency(bill.amount)}</span>
                               </div>
