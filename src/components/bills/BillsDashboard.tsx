@@ -219,27 +219,6 @@ const BillsDashboard: React.FC<BillsDashboardProps> = ({
     return days[day];
   };
 
-  const handleMarkAsPaid = async (billId: string) => {
-    try {
-      const { error } = await supabase
-        .from('bills')
-        .update({ is_paid: true })
-        .eq('id', billId);
-
-      if (error) throw error;
-
-      // Update the local state to reflect the change
-      const updatedBills = bills.map(bill => 
-        bill.id === billId ? { ...bill, is_paid: true } : bill
-      );
-      
-      // You'll need to implement a way to update the parent component's bills state
-      // This could be through a callback prop or state management
-    } catch (error) {
-      console.error('Error marking bill as paid:', error);
-    }
-  };
-
   return (
     <div className="bg-white rounded-lg shadow-sm mb-6">
       <div className="p-3 border-b flex justify-between items-center">
@@ -370,21 +349,6 @@ const BillsDashboard: React.FC<BillsDashboardProps> = ({
                                       </span>
                                     )}
                                   </>
-                                )}
-                                {!bill.is_paid && (
-                                  <button
-                                    onClick={() => handleMarkAsPaid(bill.id)}
-                                    className="text-xs bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded-full hover:bg-blue-200 transition-colors flex items-center gap-1"
-                                  >
-                                    <CheckCircle2 size={12} />
-                                    Mark as Paid
-                                  </button>
-                                )}
-                                {bill.is_paid && (
-                                  <span className="text-xs bg-green-100 text-green-800 px-1.5 py-0.5 rounded-full flex items-center gap-1">
-                                    <CheckCircle2 size={12} />
-                                    Paid
-                                  </span>
                                 )}
                               </div>
                             </div>
