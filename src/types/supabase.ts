@@ -23,6 +23,7 @@ export interface Database {
           notes: string | null
           created_at: string
           updated_at: string
+          is_paid: boolean
         }
         Insert: {
           id?: string
@@ -37,6 +38,7 @@ export interface Database {
           notes?: string | null
           created_at?: string
           updated_at?: string
+          is_paid?: boolean
         }
         Update: {
           id?: string
@@ -51,6 +53,7 @@ export interface Database {
           notes?: string | null
           created_at?: string
           updated_at?: string
+          is_paid?: boolean
         }
       }
       categories: {

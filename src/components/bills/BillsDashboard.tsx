@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { format, addMonths, startOfMonth, endOfMonth, isToday, isFuture, differenceInDays, isSameDay, parseISO, addDays, addWeeks } from 'date-fns';
-import { Calendar as CalendarIcon, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, CreditCard } from 'lucide-react';
+import { Calendar as CalendarIcon, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, CreditCard, CheckCircle2 } from 'lucide-react';
 import type { Bill, Category, CreditCard as CreditCardType } from '../../types';
 import { getMonthlyBills } from '../../utils/bill-utils';
+import { supabase } from '../../lib/supabase';
 
 interface BillsDashboardProps {
   bills: Bill[];
@@ -218,6 +219,27 @@ const BillsDashboard: React.FC<BillsDashboardProps> = ({
     return days[day];
   };
 
+  const handleMarkAsPaid = async (billId: string) => {
+    try {
+      const { error } = await supabase
+        .from('bills')
+        .update({ is_paid: true })
+        .eq('id', billId);
+
+      if (error) throw error;
+
+      // Update the local state to reflect the change
+      const updatedBills = bills.map(bill => 
+        bill.id === billId ? { ...bill, is_paid: true } : bill
+      );
+      
+      // You'll need to implement a way to update the parent component's bills state
+      // This could be through a callback prop or state management
+    } catch (error) {
+      console.error('Error marking bill as paid:', error);
+    }
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-sm mb-6">
       <div className="p-3 border-b flex justify-between items-center">
@@ -332,22 +354,39 @@ const BillsDashboard: React.FC<BillsDashboardProps> = ({
                                 {getRecurrenceLabel(bill)}
                               </span>
                             </div>
-                            <div className="text-right">
+                            <div className="text-right flex items-center gap-3">
                               <span className="text-sm">{formatCurrency(bill.amount)}</span>
-                              {(bill.is_autopay || bill.card_id) && (
-                                <div className="flex gap-1 mt-1">
-                                  {bill.is_autopay && (
-                                    <span className="text-xs bg-green-100 text-green-800 px-1.5 py-0.5 rounded-full">
-                                      Auto
-                                    </span>
-                                  )}
-                                  {bill.card_id && !isCreditCardPayment && (
-                                    <span className="text-xs bg-purple-100 text-purple-800 px-1.5 py-0.5 rounded-full">
-                                      CC
-                                    </span>
-                                  )}
-                                </div>
-                              )}
+                              <div className="flex gap-1">
+                                {(bill.is_autopay || bill.card_id) && (
+                                  <>
+                                    {bill.is_autopay && (
+                                      <span className="text-xs bg-green-100 text-green-800 px-1.5 py-0.5 rounded-full">
+                                        Auto
+                                      </span>
+                                    )}
+                                    {bill.card_id && !isCreditCardPayment && (
+                                      <span className="text-xs bg-purple-100 text-purple-800 px-1.5 py-0.5 rounded-full">
+                                        CC
+                                      </span>
+                                    )}
+                                  </>
+                                )}
+                                {!bill.is_paid && (
+                                  <button
+                                    onClick={() => handleMarkAsPaid(bill.id)}
+                                    className="text-xs bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded-full hover:bg-blue-200 transition-colors flex items-center gap-1"
+                                  >
+                                    <CheckCircle2 size={12} />
+                                    Mark as Paid
+                                  </button>
+                                )}
+                                {bill.is_paid && (
+                                  <span className="text-xs bg-green-100 text-green-800 px-1.5 py-0.5 rounded-full flex items-center gap-1">
+                                    <CheckCircle2 size={12} />
+                                    Paid
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </div>
                         );

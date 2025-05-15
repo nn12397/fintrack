@@ -41,6 +41,7 @@ export interface Bill {
   updated_at: string;
   category?: Category;
   card?: CreditCard | DebitCard;
+  is_paid: boolean;
 }
 
 export interface Category {
