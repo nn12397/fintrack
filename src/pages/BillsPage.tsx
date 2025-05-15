@@ -131,18 +131,18 @@ const BillsPage: React.FC = () => {
     try {
       const { error } = await supabase
         .from('bills')
-        .update({ is_paid: true })
+        .update({ is_paid: !bill.is_paid })
         .eq('id', bill.id);
 
       if (error) throw error;
 
       // Update local state
       setBills((prevBills: Bill[]) => 
-        prevBills.map((b: Bill) => b.id === bill.id ? { ...b, is_paid: true } : b)
+        prevBills.map((b: Bill) => b.id === bill.id ? { ...b, is_paid: !bill.is_paid } : b)
       );
     } catch (err: any) {
-      console.error('Failed to mark bill as paid:', err);
-      alert('Failed to mark bill as paid. Please try again.');
+      console.error('Failed to update bill paid status:', err);
+      alert('Failed to update bill status. Please try again.');
     }
   };
 
@@ -386,7 +386,10 @@ const BillsPage: React.FC = () => {
                           </Button>
                         )}
                         {bill.is_paid && (
-                          <span className="text-xs bg-green-100 text-green-800 px-1.5 py-0.5 rounded-full flex items-center gap-1">
+                          <span 
+                            className="text-xs bg-green-100 text-green-800 px-1.5 py-0.5 rounded-full flex items-center gap-1 cursor-pointer hover:bg-green-200"
+                            onClick={() => handleMarkAsPaid(bill)}
+                          >
                             <CheckCircle2 size={12} />
                             Paid
                           </span>
@@ -506,7 +509,10 @@ const BillsPage: React.FC = () => {
                           </Button>
                         )}
                         {bill.is_paid && (
-                          <span className="text-xs bg-green-100 text-green-800 px-1.5 py-0.5 rounded-full flex items-center gap-1">
+                          <span 
+                            className="text-xs bg-green-100 text-green-800 px-1.5 py-0.5 rounded-full flex items-center gap-1 cursor-pointer hover:bg-green-200"
+                            onClick={() => handleMarkAsPaid(bill)}
+                          >
                             <CheckCircle2 size={12} />
                             Paid
                           </span>
