@@ -29,6 +29,13 @@ const SavingsPlans: React.FC<SavingsPlansProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [showActions, setShowActions] = useState<boolean>(false);
 
+  const calculateCurrentProgress = (planId: string) => {
+    const planPayments = payments[planId] || [];
+    return planPayments
+      .filter(payment => payment.paid_status === true)
+      .reduce((sum, payment) => sum + payment.amount, 0);
+  };
+
   useEffect(() => {
     const fetchPayments = async () => {
       const paymentsData: Record<string, SavingsPayment[]> = {};
@@ -193,7 +200,7 @@ const SavingsPlans: React.FC<SavingsPlansProps> = ({
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Current Progress</span>
                   <span className="font-bold text-[#1e293b]">
-                    {formatCurrency(plan.current_amount)}
+                    {formatCurrency(calculateCurrentProgress(plan.savings_id))}
                   </span>
                 </div>
                 {plan.goal_amount > 0 && (
@@ -201,7 +208,7 @@ const SavingsPlans: React.FC<SavingsPlansProps> = ({
                     <div
                       className="bg-[#f97316] h-2.5 rounded-full"
                       style={{ 
-                        width: `${Math.min((plan.current_amount / plan.goal_amount) * 100, 100)}%` 
+                        width: `${Math.min((calculateCurrentProgress(plan.savings_id) / plan.goal_amount) * 100, 100)}%` 
                       }}
                     ></div>
                   </div>
