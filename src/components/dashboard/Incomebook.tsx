@@ -39,9 +39,15 @@ const IncomeBook: React.FC<IncomebookProps> = ({ projectedBalance }: IncomebookP
   const [expandedPeriods, setExpandedPeriods] = useState<Set<string>>(new Set());
   const [includeSavings, setIncludeSavings] = useState(true);
   const [showBreakdown, setShowBreakdown] = useState<Set<string>>(new Set());
+  const [paychecks, setPaychecks] = useState<Paycheck[]>([]);
+  const [bills, setBills] = useState<Bill[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [debitCards, setDebitCards] = useState<any[]>([]);
+  const [nextPayDate, setNextPayDate] = useState<string | null>(null);
+  const [savingsPayments, setSavingsPayments] = useState<any[]>([]);
 
   const togglePeriod = (periodId: string) => {
-    setExpandedPeriods(prev => {
+    setExpandedPeriods((prev: Set<string>) => {
       const newSet = new Set(prev);
       if (newSet.has(periodId)) {
         newSet.delete(periodId);
@@ -57,7 +63,7 @@ const IncomeBook: React.FC<IncomebookProps> = ({ projectedBalance }: IncomebookP
   };
 
   const toggleBreakdown = (periodId: string) => {
-    setShowBreakdown(prev => {
+    setShowBreakdown((prev: Set<string>) => {
       const newSet = new Set(prev);
       if (newSet.has(periodId)) {
         newSet.delete(periodId);
