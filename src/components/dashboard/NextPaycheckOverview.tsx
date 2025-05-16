@@ -11,7 +11,11 @@ import { getCategories } from '../../services/category-service';
 import { getMonthlyBills } from '../../utils/bill-utils';
 import { Card } from '../ui/Card';
 
-const NextPaycheckOverview: React.FC = () => {
+interface NextPaycheckOverviewProps {
+  onProjectedBalanceChange: (balance: number) => void;
+}
+
+const NextPaycheckOverview: React.FC<NextPaycheckOverviewProps> = ({ onProjectedBalanceChange }) => {
   const [debitCards, setDebitCards] = useState<DebitCard[]>([]);
   const [bills, setBills] = useState<Bill[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -249,6 +253,23 @@ const NextPaycheckOverview: React.FC = () => {
 
     fetchData();
   }, []);
+
+  // Add effect to notify parent of projected balance changes
+  useEffect(() => {
+    if (!isLoading && !error) {
+      const totalAvailableFunds = debitCards.reduce(
+        (sum, card) => sum + card.available_balance,
+        0
+      );
+
+      const upcomingBillsTotal = bills
+        .filter(bill => !bill.is_paid)
+        .reduce((sum, bill) => sum + bill.amount, 0);
+
+      const remainingAfterBills = totalAvailableFunds - upcomingBillsTotal;
+      onProjectedBalanceChange(remainingAfterBills);
+    }
+  }, [debitCards, bills, isLoading, error, onProjectedBalanceChange]);
 
   if (isLoading) {
     return (

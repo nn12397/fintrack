@@ -27,11 +27,15 @@ interface PaycheckPeriod {
   endingBalance: number;
 }
 
-export default function IncomeBook() {
+interface IncomebookProps {
+  projectedBalance: number | null;
+}
+
+const IncomeBook: React.FC<IncomebookProps> = ({ projectedBalance }: IncomebookProps) => {
   const [periods, setPeriods] = useState<PaycheckPeriod[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentBalance, setCurrentBalance] = useState(0);
+  const [currentBalance, setCurrentBalance] = useState(projectedBalance !== null ? projectedBalance : 0);
   const [expandedPeriods, setExpandedPeriods] = useState<Set<string>>(new Set());
   const [includeSavings, setIncludeSavings] = useState(true);
   const [showBreakdown, setShowBreakdown] = useState<Set<string>>(new Set());
@@ -63,6 +67,41 @@ export default function IncomeBook() {
       return newSet;
     });
   };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        const [paychecksData, billsData, categoriesData, debitCardsData, nextPayDateResult, savingsPaymentsData] = await Promise.all([
+          getPaychecks(),
+          getBills(),
+          getCategories(),
+          getDebitCards(),
+          getNextPaycheckDate(),
+          getRecentSavingsPayments()
+        ]);
+
+        setPaychecks(paychecksData);
+        setBills(billsData);
+        setCategories(categoriesData);
+        setDebitCards(debitCardsData);
+        setNextPayDate(nextPayDateResult);
+        setSavingsPayments(savingsPaymentsData);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // Use projectedBalance as starting balance if available
+  const startingBalance = projectedBalance !== null ? projectedBalance : debitCards.reduce(
+    (sum, card) => sum + card.available_balance,
+    0
+  );
 
   useEffect(() => {
     async function fetchData() {
@@ -104,7 +143,7 @@ export default function IncomeBook() {
         // Calculate total bills and remaining balance
         const upcomingBillsTotal = filteredBills.reduce((sum, bill) => sum + (bill.amount || 0), 0);
         const remainingAfterBills = totalAvailableFunds - upcomingBillsTotal;
-        setCurrentBalance(remainingAfterBills);
+        setCurrentBalance(projectedBalance !== null ? projectedBalance : remainingAfterBills);
 
         // Get next 6 months of paychecks
         const startDate = new Date();
@@ -129,7 +168,7 @@ export default function IncomeBook() {
         }
 
         // Calculate periods between paychecks
-        let runningBalance = remainingAfterBills; // Start with the remaining balance after current bills
+        let runningBalance = projectedBalance !== null ? projectedBalance : remainingAfterBills; // Start with the projected balance
         const calculatedPeriods: PaycheckPeriod[] = [];
 
         for (let i = 0; i < relevantPaychecks.length; i++) {
@@ -446,4 +485,6 @@ export default function IncomeBook() {
       </div>
     </div>
   );
-}
+};
+
+export default IncomeBook;
