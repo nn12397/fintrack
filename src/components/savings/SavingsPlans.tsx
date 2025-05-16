@@ -35,10 +35,10 @@ const SavingsPlans: React.FC<SavingsPlansProps> = ({
       for (const plan of plans) {
         try {
           const planPayments = await getSavingsPayments(plan.savings_id);
-          paymentsData[plan.id] = planPayments;
+          paymentsData[plan.savings_id] = planPayments;
         } catch (error) {
           console.error(`Failed to fetch payments for plan ${plan.id}:`, error);
-          paymentsData[plan.id] = [];
+          paymentsData[plan.savings_id] = [];
         }
       }
       setPayments(paymentsData);
@@ -68,7 +68,7 @@ const SavingsPlans: React.FC<SavingsPlansProps> = ({
 
   const getUpcomingPayments = (plan: SavingsPlan) => {
     const today = startOfDay(new Date());
-    return payments[plan.id]?.filter(payment => 
+    return payments[plan.savings_id]?.filter(payment => 
       isAfter(parseISO(payment.payment_date), today)
     ).sort((a, b) => 
       parseISO(a.payment_date).getTime() - parseISO(b.payment_date).getTime()
@@ -77,7 +77,7 @@ const SavingsPlans: React.FC<SavingsPlansProps> = ({
 
   const getPastPayments = (plan: SavingsPlan) => {
     const today = startOfDay(new Date());
-    return payments[plan.id]?.filter(payment => 
+    return payments[plan.savings_id]?.filter(payment => 
       isBefore(parseISO(payment.payment_date), today)
     ).sort((a, b) => 
       parseISO(b.payment_date).getTime() - parseISO(a.payment_date).getTime()
