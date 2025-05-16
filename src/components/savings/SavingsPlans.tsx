@@ -304,75 +304,73 @@ const SavingsPlans: React.FC<SavingsPlansProps> = ({
                       </div>
                     )}
 
-                    {pastPayments.length > 0 && (
-                      <div className="mt-4">
-                        <div className="flex justify-between items-center mb-2">
-                          <h4 className="text-sm font-medium text-gray-700">Past Payments</h4>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setShowActions(!showActions)}
-                            className="text-gray-600 hover:text-gray-900"
-                          >
-                            {showActions ? 'Hide Actions' : 'Show Actions'}
-                          </Button>
-                        </div>
-                        <div className="space-y-2">
-                          {pastPayments.length > 0 ? (
-                            pastPayments.map(payment => (
-                              <div key={payment.id} className="flex justify-between items-center text-sm">
-                                <span className="text-gray-600">
-                                  {format(parseISO(payment.payment_date), 'MMM d, yyyy')}
-                                </span>
-                                <div className="flex items-center space-x-2">
-                                  <span className="font-medium text-[#1e293b]">
-                                    {formatCurrency(payment.amount)}
-                                  </span>
-                                  {showActions && (
-                                    <>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => handlePaidStatusToggle(payment.id, payment.paid_status)}
-                                        className="p-1"
-                                      >
-                                        <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                                          payment.paid_status === true 
-                                            ? 'bg-green-100 text-green-600 hover:bg-green-200' 
-                                            : payment.paid_status === false 
-                                            ? 'bg-red-100 text-red-600 hover:bg-red-200'
-                                            : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
-                                        }`}>
-                                          {payment.paid_status === true ? (
-                                            <Check size={14} />
-                                          ) : payment.paid_status === false ? (
-                                            <X size={14} />
-                                          ) : (
-                                            <Check size={14} />
-                                          )}
-                                        </div>
-                                      </Button>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => handleDeletePayment(payment.id)}
-                                        className="p-1 text-red-600 hover:text-red-700 hover:bg-red-50"
-                                      >
-                                        <Trash2 size={16} />
-                                      </Button>
-                                    </>
-                                  )}
-                                </div>
-                              </div>
-                            ))
-                          ) : (
-                            <p className="text-sm text-gray-500 text-center py-2">
-                              No past payments
-                            </p>
-                          )}
-                        </div>
+                    <div className="mt-4">
+                      <div className="flex justify-between items-center mb-2">
+                        <h4 className="text-sm font-medium text-gray-700">Past Payments</h4>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowActions(!showActions)}
+                          className="text-gray-600 hover:text-gray-900"
+                        >
+                          {showActions ? 'Hide Actions' : 'Show Actions'}
+                        </Button>
                       </div>
-                    )}
+                      <div className="space-y-2">
+                        {pastPayments.length > 0 ? (
+                          pastPayments.map(payment => (
+                            <div key={payment.id} className="flex justify-between items-center text-sm">
+                              <span className="text-gray-600">
+                                {format(parseISO(payment.payment_date), 'MMM d, yyyy')}
+                              </span>
+                              <div className="flex items-center space-x-2">
+                                <span className="font-medium text-[#1e293b]">
+                                  {formatCurrency(payment.amount)}
+                                </span>
+                                {showActions && (
+                                  <>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handlePaidStatusToggle(payment.id, payment.paid_status)}
+                                      className="p-1"
+                                    >
+                                      <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                                        payment.paid_status === true 
+                                          ? 'bg-green-100 text-green-600 hover:bg-green-200' 
+                                          : payment.paid_status === false 
+                                          ? 'bg-red-100 text-red-600 hover:bg-red-200'
+                                          : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
+                                      }`}>
+                                        {payment.paid_status === true ? (
+                                          <Check size={14} />
+                                        ) : payment.paid_status === false ? (
+                                          <X size={14} />
+                                        ) : (
+                                          <Check size={14} />
+                                        )}
+                                      </div>
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleDeletePayment(payment.id)}
+                                      className="p-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                    >
+                                      <Trash2 size={16} />
+                                    </Button>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-sm text-gray-500 text-center py-2">
+                            No past payments
+                          </p>
+                        )}
+                      </div>
+                    </div>
 
                     {upcomingPayments.length === 0 && pastPayments.length === 0 && (
                       <p className="text-sm text-gray-500 text-center py-2">
