@@ -142,7 +142,7 @@ const IncomeBook: React.FC<IncomebookProps> = ({ projectedBalance }: IncomebookP
 
         // Calculate total bills and remaining balance
         const upcomingBillsTotal = filteredBills.reduce((sum, bill) => sum + (bill.amount || 0), 0);
-        setCurrentBalance(projectedBalance !== null ? projectedBalance : totalAvailableFunds - upcomingBillsTotal);
+        setCurrentBalance(projectedBalance !== null ? projectedBalance : 0);
 
         // Get next 6 months of paychecks
         const startDate = new Date();
@@ -275,7 +275,7 @@ const IncomeBook: React.FC<IncomebookProps> = ({ projectedBalance }: IncomebookP
     }
 
     fetchData();
-  }, [includeSavings]);
+  }, [includeSavings, projectedBalance]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
