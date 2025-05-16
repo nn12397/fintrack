@@ -266,8 +266,7 @@ const NextPaycheckOverview: React.FC<NextPaycheckOverviewProps> = ({ onProjected
         .filter(bill => !bill.is_paid)
         .reduce((sum, bill) => sum + bill.amount, 0);
 
-      const remainingAfterBills = totalAvailableFunds - upcomingBillsTotal;
-      onProjectedBalanceChange(remainingAfterBills);
+      onProjectedBalanceChange(totalAvailableFunds - upcomingBillsTotal);
     }
   }, [debitCards, bills, isLoading, error, onProjectedBalanceChange]);
 

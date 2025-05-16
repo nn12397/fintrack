@@ -103,12 +103,6 @@ const IncomeBook: React.FC<IncomebookProps> = ({ projectedBalance }: IncomebookP
     fetchData();
   }, []);
 
-  // Use projectedBalance as starting balance if available
-  const startingBalance = projectedBalance !== null ? projectedBalance : debitCards.reduce(
-    (sum, card) => sum + card.available_balance,
-    0
-  );
-
   useEffect(() => {
     async function fetchData() {
       try {
@@ -148,8 +142,7 @@ const IncomeBook: React.FC<IncomebookProps> = ({ projectedBalance }: IncomebookP
 
         // Calculate total bills and remaining balance
         const upcomingBillsTotal = filteredBills.reduce((sum, bill) => sum + (bill.amount || 0), 0);
-        const remainingAfterBills = totalAvailableFunds - upcomingBillsTotal;
-        setCurrentBalance(projectedBalance !== null ? projectedBalance : remainingAfterBills);
+        setCurrentBalance(projectedBalance !== null ? projectedBalance : totalAvailableFunds - upcomingBillsTotal);
 
         // Get next 6 months of paychecks
         const startDate = new Date();
@@ -174,7 +167,7 @@ const IncomeBook: React.FC<IncomebookProps> = ({ projectedBalance }: IncomebookP
         }
 
         // Calculate periods between paychecks
-        let runningBalance = projectedBalance !== null ? projectedBalance : remainingAfterBills; // Start with the projected balance
+        let runningBalance = projectedBalance !== null ? projectedBalance : totalAvailableFunds - upcomingBillsTotal; // Start with the projected balance
         const calculatedPeriods: PaycheckPeriod[] = [];
 
         for (let i = 0; i < relevantPaychecks.length; i++) {
@@ -327,7 +320,7 @@ const IncomeBook: React.FC<IncomebookProps> = ({ projectedBalance }: IncomebookP
           <div className="flex items-center space-x-2">
             <span className="text-base text-gray-600">Starting Balance (after current bills):</span>
             <span className="text-xl font-semibold text-[#f97316]">
-              {formatCurrency(currentBalance)}
+              {formatCurrency(projectedBalance !== null ? projectedBalance : 0)}
             </span>
           </div>
         </div>
