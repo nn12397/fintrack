@@ -167,7 +167,7 @@ const IncomeBook: React.FC<IncomebookProps> = ({ projectedBalance }: IncomebookP
         }
 
         // Calculate periods between paychecks
-        let runningBalance = projectedBalance !== null ? projectedBalance : totalAvailableFunds - upcomingBillsTotal; // Start with the projected balance
+        let runningBalance = projectedBalance !== null ? projectedBalance : 0; // Start with the projected balance
         const calculatedPeriods: PaycheckPeriod[] = [];
 
         for (let i = 0; i < relevantPaychecks.length; i++) {
