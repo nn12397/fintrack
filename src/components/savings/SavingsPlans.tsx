@@ -79,7 +79,7 @@ const SavingsPlans: React.FC<SavingsPlansProps> = ({
   const getPastPayments = (plan: SavingsPlan) => {
     const today = startOfDay(new Date());
     const pastPayments = payments[plan.savings_id]?.filter(payment => 
-      isBefore(parseISO(payment.payment_date), today)
+      !isAfter(parseISO(payment.payment_date), today)
     ).sort((a, b) => 
       parseISO(b.payment_date).getTime() - parseISO(a.payment_date).getTime()
     ) || [];
