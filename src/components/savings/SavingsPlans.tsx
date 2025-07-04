@@ -29,16 +29,24 @@ const SavingsPlans: React.FC<SavingsPlansProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [showActions, setShowActions] = useState<boolean>(false);
 
+  const calculateCurrentProgress = (planId: string) => {
+    const planPayments = payments[planId] || [];
+    return planPayments
+      .filter(payment => payment.paid_status === true)
+      .reduce((sum, payment) => sum + payment.amount, 0);
+  };
+
   useEffect(() => {
     const fetchPayments = async () => {
       const paymentsData: Record<string, SavingsPayment[]> = {};
       for (const plan of plans) {
         try {
           const planPayments = await getSavingsPayments(plan.savings_id);
-          paymentsData[plan.id] = planPayments;
+          console.log('Fetched payments for plan', plan.id, ':', planPayments);
+          paymentsData[plan.savings_id] = planPayments;
         } catch (error) {
           console.error(`Failed to fetch payments for plan ${plan.id}:`, error);
-          paymentsData[plan.id] = [];
+          paymentsData[plan.savings_id] = [];
         }
       }
       setPayments(paymentsData);
@@ -68,7 +76,7 @@ const SavingsPlans: React.FC<SavingsPlansProps> = ({
 
   const getUpcomingPayments = (plan: SavingsPlan) => {
     const today = startOfDay(new Date());
-    return payments[plan.id]?.filter(payment => 
+    return payments[plan.savings_id]?.filter(payment => 
       isAfter(parseISO(payment.payment_date), today)
     ).sort((a, b) => 
       parseISO(a.payment_date).getTime() - parseISO(b.payment_date).getTime()
@@ -77,11 +85,13 @@ const SavingsPlans: React.FC<SavingsPlansProps> = ({
 
   const getPastPayments = (plan: SavingsPlan) => {
     const today = startOfDay(new Date());
-    return payments[plan.id]?.filter(payment => 
-      isBefore(parseISO(payment.payment_date), today)
+    const pastPayments = payments[plan.savings_id]?.filter(payment => 
+      !isAfter(parseISO(payment.payment_date), today)
     ).sort((a, b) => 
       parseISO(b.payment_date).getTime() - parseISO(a.payment_date).getTime()
     ) || [];
+    console.log('Past payments for plan', plan.id, ':', pastPayments);
+    return pastPayments;
   };
 
   const handleDeletePayment = (paymentId: string) => {
@@ -138,6 +148,7 @@ const SavingsPlans: React.FC<SavingsPlansProps> = ({
         const isExpanded = expandedPlans.has(plan.id);
         const upcomingPayments = getUpcomingPayments(plan);
         const pastPayments = getPastPayments(plan);
+        console.log('Rendering plan', plan.id, 'with', pastPayments.length, 'past payments');
 
         return (
           <Card 
@@ -189,7 +200,7 @@ const SavingsPlans: React.FC<SavingsPlansProps> = ({
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Current Progress</span>
                   <span className="font-bold text-[#1e293b]">
-                    {formatCurrency(plan.current_amount)}
+                    {formatCurrency(calculateCurrentProgress(plan.savings_id))}
                   </span>
                 </div>
                 {plan.goal_amount > 0 && (
@@ -197,7 +208,7 @@ const SavingsPlans: React.FC<SavingsPlansProps> = ({
                     <div
                       className="bg-[#f97316] h-2.5 rounded-full"
                       style={{ 
-                        width: `${Math.min((plan.current_amount / plan.goal_amount) * 100, 100)}%` 
+                        width: `${Math.min((calculateCurrentProgress(plan.savings_id) / plan.goal_amount) * 100, 100)}%` 
                       }}
                     ></div>
                   </div>
@@ -300,23 +311,73 @@ const SavingsPlans: React.FC<SavingsPlansProps> = ({
                       </div>
                     )}
 
-                    {pastPayments.length > 0 && (
-                      <div>
-                        <h4 className="text-sm font-medium text-gray-700 mb-2">Payment History</h4>
-                        <div className="space-y-2">
-                          {pastPayments.map(payment => (
+                    <div className="mt-4">
+                      <div className="flex justify-between items-center mb-2">
+                        <h4 className="text-sm font-medium text-gray-700">Past Payments</h4>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowActions(!showActions)}
+                          className="text-gray-600 hover:text-gray-900"
+                        >
+                          {showActions ? 'Hide Actions' : 'Show Actions'}
+                        </Button>
+                      </div>
+                      <div className="space-y-2">
+                        {pastPayments.length > 0 ? (
+                          pastPayments.map(payment => (
                             <div key={payment.id} className="flex justify-between items-center text-sm">
                               <span className="text-gray-600">
                                 {format(parseISO(payment.payment_date), 'MMM d, yyyy')}
                               </span>
-                              <span className={`font-medium ${payment.payment_type === 'deposit' ? 'text-green-600' : 'text-red-600'}`}>
-                                {payment.payment_type === 'deposit' ? '+' : '-'}{formatCurrency(payment.amount)}
-                              </span>
+                              <div className="flex items-center space-x-2">
+                                <span className="font-medium text-[#1e293b]">
+                                  {formatCurrency(payment.amount)}
+                                </span>
+                                {showActions && (
+                                  <>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handlePaidStatusToggle(payment.id, payment.paid_status)}
+                                      className="p-1"
+                                    >
+                                      <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                                        payment.paid_status === true 
+                                          ? 'bg-green-100 text-green-600 hover:bg-green-200' 
+                                          : payment.paid_status === false 
+                                          ? 'bg-red-100 text-red-600 hover:bg-red-200'
+                                          : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
+                                      }`}>
+                                        {payment.paid_status === true ? (
+                                          <Check size={14} />
+                                        ) : payment.paid_status === false ? (
+                                          <X size={14} />
+                                        ) : (
+                                          <Check size={14} />
+                                        )}
+                                      </div>
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleDeletePayment(payment.id)}
+                                      className="p-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                    >
+                                      <Trash2 size={16} />
+                                    </Button>
+                                  </>
+                                )}
+                              </div>
                             </div>
-                          ))}
-                        </div>
+                          ))
+                        ) : (
+                          <p className="text-sm text-gray-500 text-center py-2">
+                            No past payments
+                          </p>
+                        )}
                       </div>
-                    )}
+                    </div>
 
                     {upcomingPayments.length === 0 && pastPayments.length === 0 && (
                       <p className="text-sm text-gray-500 text-center py-2">

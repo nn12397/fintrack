@@ -18,13 +18,15 @@ import {
   Palette,
   CreditCard as CreditCardIcon,
   Wallet,
-  Zap
+  Zap,
+  CheckCircle2
 } from 'lucide-react';
 import Button from '../components/ui/Button';
 import BillsDashboard from '../components/bills/BillsDashboard';
 import Modal from '../components/ui/Modal';
 import BillForm from '../components/bills/BillForm';
 import CategoryManager from '../components/bills/CategoryManager';
+import { supabase } from '../lib/supabase';
 
 const BillsPage: React.FC = () => {
   const [bills, setBills] = useState<Bill[]>([]);
@@ -97,7 +99,23 @@ const BillsPage: React.FC = () => {
       if (selectedBill) {
         await updateBill(selectedBill.id, formData);
       } else {
-        await createBill(formData);
+        // Ensure required fields are present for new bills
+        if (!formData.name || !formData.amount || !formData.due_date || !formData.category_id || !formData.bill_type) {
+          throw new Error('Missing required fields');
+        }
+        await createBill({
+          ...formData,
+          name: formData.name,
+          amount: formData.amount,
+          due_date: formData.due_date,
+          category_id: formData.category_id,
+          bill_type: formData.bill_type,
+          frequency: formData.frequency || 'monthly',
+          is_autopay: formData.is_autopay || false,
+          card_id: formData.card_id || null,
+          notes: formData.notes || null,
+          is_paid: formData.is_paid || false
+        });
       }
       setIsModalOpen(false);
       await fetchData();
@@ -106,6 +124,25 @@ const BillsPage: React.FC = () => {
       throw err;
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleMarkAsPaid = async (bill: Bill) => {
+    try {
+      const { error } = await supabase
+        .from('bills')
+        .update({ is_paid: !bill.is_paid })
+        .eq('id', bill.id);
+
+      if (error) throw error;
+
+      // Update local state
+      setBills((prevBills: Bill[]) => 
+        prevBills.map((b: Bill) => b.id === bill.id ? { ...b, is_paid: !bill.is_paid } : b)
+      );
+    } catch (err: any) {
+      console.error('Failed to update bill paid status:', err);
+      alert('Failed to update bill status. Please try again.');
     }
   };
 
@@ -336,24 +373,46 @@ const BillsPage: React.FC = () => {
                       {getPaymentMethod(bill)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditBill(bill)}
-                        leftIcon={<Pencil size={16} />}
-                        className="mr-2"
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteBill(bill)}
-                        leftIcon={<Trash2 size={16} />}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        Delete
-                      </Button>
+                      <div className="flex items-center justify-end gap-2">
+                        {!bill.is_paid && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleMarkAsPaid(bill)}
+                            leftIcon={<CheckCircle2 size={16} />}
+                            className="text-green-600 hover:text-green-700"
+                          >
+                            Mark as Paid
+                          </Button>
+                        )}
+                        {bill.is_paid && (
+                          <span 
+                            className="text-xs bg-green-100 text-green-800 px-1.5 py-0.5 rounded-full flex items-center gap-1 cursor-pointer hover:bg-green-200"
+                            onClick={() => handleMarkAsPaid(bill)}
+                          >
+                            <CheckCircle2 size={12} />
+                            Paid
+                          </span>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEditBill(bill)}
+                          leftIcon={<Pencil size={16} />}
+                          className="mr-2"
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteBill(bill)}
+                          leftIcon={<Trash2 size={16} />}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          Delete
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -437,24 +496,46 @@ const BillsPage: React.FC = () => {
                       {getPaymentMethod(bill)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditBill(bill)}
-                        leftIcon={<Pencil size={16} />}
-                        className="mr-2"
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteBill(bill)}
-                        leftIcon={<Trash2 size={16} />}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        Delete
-                      </Button>
+                      <div className="flex items-center justify-end gap-2">
+                        {!bill.is_paid && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleMarkAsPaid(bill)}
+                            leftIcon={<CheckCircle2 size={16} />}
+                            className="text-green-600 hover:text-green-700"
+                          >
+                            Mark as Paid
+                          </Button>
+                        )}
+                        {bill.is_paid && (
+                          <span 
+                            className="text-xs bg-green-100 text-green-800 px-1.5 py-0.5 rounded-full flex items-center gap-1 cursor-pointer hover:bg-green-200"
+                            onClick={() => handleMarkAsPaid(bill)}
+                          >
+                            <CheckCircle2 size={12} />
+                            Paid
+                          </span>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEditBill(bill)}
+                          leftIcon={<Pencil size={16} />}
+                          className="mr-2"
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteBill(bill)}
+                          leftIcon={<Trash2 size={16} />}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          Delete
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))}

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { format, addMonths, startOfMonth, endOfMonth, isToday, isFuture, differenceInDays, isSameDay, parseISO, addDays, addWeeks } from 'date-fns';
-import { Calendar as CalendarIcon, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, CreditCard } from 'lucide-react';
+import { Calendar as CalendarIcon, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, CreditCard, CheckCircle2 } from 'lucide-react';
 import type { Bill, Category, CreditCard as CreditCardType } from '../../types';
 import { getMonthlyBills } from '../../utils/bill-utils';
+import { supabase } from '../../lib/supabase';
 
 interface BillsDashboardProps {
   bills: Bill[];
@@ -332,22 +333,24 @@ const BillsDashboard: React.FC<BillsDashboardProps> = ({
                                 {getRecurrenceLabel(bill)}
                               </span>
                             </div>
-                            <div className="text-right">
+                            <div className="text-right flex items-center gap-3">
                               <span className="text-sm">{formatCurrency(bill.amount)}</span>
-                              {(bill.is_autopay || bill.card_id) && (
-                                <div className="flex gap-1 mt-1">
-                                  {bill.is_autopay && (
-                                    <span className="text-xs bg-green-100 text-green-800 px-1.5 py-0.5 rounded-full">
-                                      Auto
-                                    </span>
-                                  )}
-                                  {bill.card_id && !isCreditCardPayment && (
-                                    <span className="text-xs bg-purple-100 text-purple-800 px-1.5 py-0.5 rounded-full">
-                                      CC
-                                    </span>
-                                  )}
-                                </div>
-                              )}
+                              <div className="flex gap-1">
+                                {(bill.is_autopay || bill.card_id) && (
+                                  <>
+                                    {bill.is_autopay && (
+                                      <span className="text-xs bg-green-100 text-green-800 px-1.5 py-0.5 rounded-full">
+                                        Auto
+                                      </span>
+                                    )}
+                                    {bill.card_id && !isCreditCardPayment && (
+                                      <span className="text-xs bg-purple-100 text-purple-800 px-1.5 py-0.5 rounded-full">
+                                        CC
+                                      </span>
+                                    )}
+                                  </>
+                                )}
+                              </div>
                             </div>
                           </div>
                         );

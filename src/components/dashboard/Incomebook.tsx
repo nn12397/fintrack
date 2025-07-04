@@ -27,17 +27,27 @@ interface PaycheckPeriod {
   endingBalance: number;
 }
 
-export default function IncomeBook() {
+interface IncomebookProps {
+  projectedBalance: number | null;
+}
+
+const IncomeBook: React.FC<IncomebookProps> = ({ projectedBalance }: IncomebookProps) => {
   const [periods, setPeriods] = useState<PaycheckPeriod[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentBalance, setCurrentBalance] = useState(0);
+  const [currentBalance, setCurrentBalance] = useState(projectedBalance !== null ? projectedBalance : 0);
   const [expandedPeriods, setExpandedPeriods] = useState<Set<string>>(new Set());
   const [includeSavings, setIncludeSavings] = useState(true);
   const [showBreakdown, setShowBreakdown] = useState<Set<string>>(new Set());
+  const [paychecks, setPaychecks] = useState<Paycheck[]>([]);
+  const [bills, setBills] = useState<Bill[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [debitCards, setDebitCards] = useState<any[]>([]);
+  const [nextPayDate, setNextPayDate] = useState<string | null>(null);
+  const [savingsPayments, setSavingsPayments] = useState<any[]>([]);
 
   const togglePeriod = (periodId: string) => {
-    setExpandedPeriods(prev => {
+    setExpandedPeriods((prev: Set<string>) => {
       const newSet = new Set(prev);
       if (newSet.has(periodId)) {
         newSet.delete(periodId);
@@ -53,7 +63,7 @@ export default function IncomeBook() {
   };
 
   const toggleBreakdown = (periodId: string) => {
-    setShowBreakdown(prev => {
+    setShowBreakdown((prev: Set<string>) => {
       const newSet = new Set(prev);
       if (newSet.has(periodId)) {
         newSet.delete(periodId);
@@ -63,6 +73,35 @@ export default function IncomeBook() {
       return newSet;
     });
   };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        const [paychecksData, billsData, categoriesData, debitCardsData, nextPayDateResult, savingsPaymentsData] = await Promise.all([
+          getPaychecks(),
+          getBills(),
+          getCategories(),
+          getDebitCards(),
+          getNextPaycheckDate(),
+          getRecentSavingsPayments()
+        ]);
+
+        setPaychecks(paychecksData);
+        setBills(billsData);
+        setCategories(categoriesData);
+        setDebitCards(debitCardsData);
+        setNextPayDate(nextPayDateResult);
+        setSavingsPayments(savingsPaymentsData);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   useEffect(() => {
     async function fetchData() {
@@ -103,8 +142,7 @@ export default function IncomeBook() {
 
         // Calculate total bills and remaining balance
         const upcomingBillsTotal = filteredBills.reduce((sum, bill) => sum + (bill.amount || 0), 0);
-        const remainingAfterBills = totalAvailableFunds - upcomingBillsTotal;
-        setCurrentBalance(remainingAfterBills);
+        setCurrentBalance(projectedBalance !== null ? projectedBalance : 0);
 
         // Get next 6 months of paychecks
         const startDate = new Date();
@@ -129,7 +167,7 @@ export default function IncomeBook() {
         }
 
         // Calculate periods between paychecks
-        let runningBalance = remainingAfterBills; // Start with the remaining balance after current bills
+        let runningBalance = projectedBalance !== null ? projectedBalance : 0; // Start with the projected balance
         const calculatedPeriods: PaycheckPeriod[] = [];
 
         for (let i = 0; i < relevantPaychecks.length; i++) {
@@ -237,7 +275,7 @@ export default function IncomeBook() {
     }
 
     fetchData();
-  }, [includeSavings]);
+  }, [includeSavings, projectedBalance]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -282,7 +320,7 @@ export default function IncomeBook() {
           <div className="flex items-center space-x-2">
             <span className="text-base text-gray-600">Starting Balance (after current bills):</span>
             <span className="text-xl font-semibold text-[#f97316]">
-              {formatCurrency(currentBalance)}
+              {formatCurrency(projectedBalance !== null ? projectedBalance : 0)}
             </span>
           </div>
         </div>
@@ -446,4 +484,6 @@ export default function IncomeBook() {
       </div>
     </div>
   );
-}
+};
+
+export default IncomeBook;

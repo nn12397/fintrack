@@ -61,6 +61,11 @@ const NextPayDateDisplay = () => {
 
 const Dashboard: React.FC = () => {
   const [isTotalOverviewExpanded, setIsTotalOverviewExpanded] = useState(false);
+  const [projectedBalance, setProjectedBalance] = useState<number | null>(null);
+
+  const handleProjectedBalanceChange = (balance: number) => {
+    setProjectedBalance(balance);
+  };
 
   return (
     <div className="space-y-6">
@@ -71,8 +76,8 @@ const Dashboard: React.FC = () => {
         isExpanded={isTotalOverviewExpanded}
         onToggle={() => setIsTotalOverviewExpanded(!isTotalOverviewExpanded)}
       />
-      <NextPaycheckOverview />
-      <IncomeBook />
+      <NextPaycheckOverview onProjectedBalanceChange={handleProjectedBalanceChange} />
+      <IncomeBook projectedBalance={projectedBalance} />
       <FinancialSummary />
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
